@@ -1,9 +1,10 @@
 import yaml, json, socket, subprocess, sys, time, threading
 
 _LAST_STATE_LENGTH = (0,0)
-REFRESH_RATE = .2 #In seconds
-UPDATE_RATE = .5 #In seconds
-PINGBACK_MAX = 1
+REFRESH_RATE = .5 #In seconds
+UPDATE_RATE = 2.5 #In seconds
+PINGBACK_MAX = 5
+CYCLE_TIME = .01
 
 outpost_objects = {}
 outposts_byname = {}
@@ -104,7 +105,7 @@ def gen_status(args):
 		return term_c.FAIL+"[ FAILING ] "+term_c.ENDC
 	return term_c.WARNING+"[ WARNING ]"+term_c.ENDC
 
-def display_status(offset=25, clear=True):
+def display_status(offset=5, clear=True):
 	global _LAST_STATE_LENGTH
 	out = ""
 	width = lambda x: get_tty_size()[1]-offset-len(x)
@@ -159,6 +160,7 @@ def main_loop(server):
 		return
 
 def main_loop2(server):
+	update_all(server)
 	t_r = time.time()
 	t_u = time.time()
 	try:
@@ -177,6 +179,7 @@ def main_loop2(server):
 			except Exception as e:
 				# print(e)
 				pass
+			time.sleep(CYCLE_TIME)
 	except KeyboardInterrupt:
 		print("\n[*] Exiting...")
 		return
