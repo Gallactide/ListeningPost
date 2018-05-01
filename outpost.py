@@ -1,6 +1,23 @@
 import yaml, json
 import socket, os, subprocess, sys, platform
 
+# Config
+BLACKLIST = []
+BLACKLIST_PENDING = {}
+STRIKE_LIMIT = 3
+DEBUG = False
+if "-v" in sys.argv:
+	sys.argv.pop(sys.argv.index("-v"))
+	DEBUG=True
+CHALLENGE = "cd5f1e5e90"
+if "-c" in sys.argv:
+	i = sys.argv.index("-c")
+	sys.argv.pop(i)
+	CHALLENGE = sys.argv.pop(i)
+	print("[+] Custom Challenge Set.")
+	if DEBUG: print(" |- Challenge: {}".format(CHALLENGE))
+WHITELIST = ["127.0.0.1"]
+
 class InvalidParameter(Exception): pass
 
 class Check:
@@ -84,23 +101,6 @@ class CheckSocketRange(CheckSocket):
 			if r not in objects:
 				return False
 		return True
-
-# Config
-BLACKLIST = []
-BLACKLIST_PENDING = {}
-STRIKE_LIMIT = 3
-DEBUG = False
-if "-v" in sys.argv:
-	sys.argv.pop(sys.argv.index("-v"))
-	DEBUG=True
-CHALLENGE = "cd5f1e5e90"
-if "-c" in sys.argv:
-	i = sys.argv.index("-c")
-	sys.argv.pop(i)
-	CHALLENGE = sys.argv.pop(i)
-	print("[+] Custom Challenge Set.")
-	if DEBUG: print(" |- Challenge: {}".format(CHALLENGE))
-WHITELIST = ["127.0.0.1"]
 
 # Configuration
 def get_parameters(path):
