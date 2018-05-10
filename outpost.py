@@ -5,18 +5,25 @@ import socket, os, subprocess, sys, platform
 BLACKLIST = []
 BLACKLIST_PENDING = {}
 STRIKE_LIMIT = 3
+CONNECTION_DEBUG = False
+if "-d" in sys.argv:
+	sys.argv.pop(sys.argv.index("-d"))
+	CONNECTION_DEBUG=True
 DEBUG = False
 if "-v" in sys.argv:
 	sys.argv.pop(sys.argv.index("-v"))
 	DEBUG=True
+	if not CONNECTION_DEBUG: CONNECTION_DEBUG = True
+if DEBUG: print("[=] Starting with Verbose Output")
+if CONNECTION_DEBUG: print("[=] Starting with Connection Debug Output")
 CHALLENGE = "cd5f1e5e90"
 if "-c" in sys.argv:
 	i = sys.argv.index("-c")
 	sys.argv.pop(i)
 	CHALLENGE = sys.argv.pop(i)
 	print("[+] Custom Challenge Set.")
-	if DEBUG: print(" |- Challenge: {}".format(CHALLENGE))
-WHITELIST = ["127.0.0.1"]
+	if DEBUG or CONNECTION_DEBUG: print(" |- Challenge: {}".format(CHALLENGE))
+WHITELIST = ["80.113.19.114"]
 
 class InvalidParameter(Exception): pass
 
@@ -202,26 +209,29 @@ def get_bound_server_sock(port):
 	return server
 
 def handle_request(d, a):
-	chal = d.decode().replace("\n","")
 	host = a[0]
 	if not host in WHITELIST or host in BLACKLIST:
-		if DEBUG: print("[*] Blocked Request from {}:{}".format(*a))
+		if CONNECTION_DEBUG: print("[*] Blocked Request from {}:{}".format(*a))
 		return b""
-	if DEBUG: print("[*] Request from {}:{}".format(*a))
+	if CONNECTION_DEBUG: print("[*] Request from {}:{}".format(*a))
+	try:
+		chal = d.decode().replace("\n","")
+	except:
+		chal = "[ INVALID FORMATTING ]"
 	if chal==CHALLENGE:
 		return json.dumps(main(DEBUG)).encode("utf-8")
 	else:
-		if DEBUG: print(" |- Invalid Challenge:", chal)
+		if CONNECTION_DEBUG: print(" |- Invalid Challenge:", chal)
 		if host in BLACKLIST_PENDING:
 			if BLACKLIST_PENDING[host]>=STRIKE_LIMIT:
 				BLACKLIST.append(host)
 				del BLACKLIST_PENDING[host]
-				if DEBUG: print(" |- Blacklisting requestor...")
+				if CONNECTION_DEBUG: print(" |- Blacklisting requestor...")
 			else:
-				if DEBUG: print(" |- Adding Strike")
+				if CONNECTION_DEBUG: print(" |- Adding Strike")
 				BLACKLIST_PENDING[host]+=1
 		else:
-			if DEBUG: print(" |- First Strike")
+			if CONNECTION_DEBUG: print(" |- First Strike")
 			BLACKLIST_PENDING[host]=1
 		return b""
 

@@ -1,10 +1,30 @@
 import yaml, json, socket, subprocess, sys, time, threading
 
 _LAST_STATE_LENGTH = (0,0)
-REFRESH_RATE = .5 #In seconds
-UPDATE_RATE = 2.5 #In seconds
-PINGBACK_MAX = 5
+UPDATE_RATE = 1.5 #In seconds
+if "-u" in sys.argv:
+	i = sys.argv.index("-u")
+	sys.argv.pop(i)
+	UPDATE_RATE = float(sys.argv.pop(i))
+REFRESH_RATE = 1 #In seconds
+if "-r" in sys.argv:
+	i = sys.argv.index("-r")
+	sys.argv.pop(i)
+	REFRESH_RATE = float(sys.argv.pop(i))
+PINGBACK_MAX = 3
+if "-pm" in sys.argv:
+	i = sys.argv.index("-pm")
+	sys.argv.pop(i)
+	PINGBACK_MAX = float(sys.argv.pop(i))
 CYCLE_TIME = .01
+DEBUG = "-v" in sys.argv
+if DEBUG: sys.argv.pop(sys.argv.index("-v"))
+if DEBUG:
+	print("[*] Configs:")
+	print(" |- REFRESH_RATE =", REFRESH_RATE)
+	print(" |- UPDATE_RATE =", UPDATE_RATE)
+	print(" |- PINGBACK_MAX =", PINGBACK_MAX)
+	print(" |- Cycle Time {}s".format(CYCLE_TIME))
 
 outpost_objects = {}
 outposts_byname = {}
@@ -90,7 +110,7 @@ def get_all_states():
 		if i.status:
 			out[i.name] = {"states":i.status["states"], "failed":len([i.status["states"][j] for j in i.status["states"] if not i.status["states"][j]]), "passed":len([i.status["states"][j] for j in i.status["states"] if i.status["states"][j]])}
 		else:
-			out[i.name] = None
+			out[i.name] = None #{"states":[], "failed":0, "passed":0}
 	return out
 
 def all_true(args):
@@ -133,8 +153,8 @@ def display_status(offset=5, clear=True):
 					l = "   {}- {}{}{}\n".format("|" if i else "#",j,"{}",term_c.OKGREEN+"[ OK ]   "+term_c.ENDC if i else term_c.FAIL+"[ Error ]"+term_c.ENDC)
 					l = l.replace("{}"," "*(width(l)+9))
 					out += l
-		else:
-			out+="\n"
+		out+="\n"
+	if out[-1]=="\n": out=out[:-1]
 	if clear: clear_display()
 	out = out[:-1]
 	_LAST_STATE_LENGTH = (len(out.split("\n")), len(out))
