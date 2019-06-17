@@ -1,5 +1,5 @@
 import yaml, json
-import socket, os, subprocess, sys, platform, ssl, datetime
+import socket, os, subprocess, sys, platform, ssl, datetime, time
 
 # Config
 BLACKLIST = []
@@ -140,11 +140,17 @@ class CertificateCheck(Check):
 
 class AptUpdateCheck(Check):
 	type_id = "Available Updates"
+	check_interval = 120 #seconds
+	last_state = None
 	def init(self, security_only=False):
+		self.last_check = time.time()-self.check_interval-1
 		self.security_only = security_only
 	def _gen_name(self): return "Security Updates" if self.security_only else "Available Updates"
 	def _check(self):
-		return int(subprocess.check_output(["/usr/lib/update-notifier/apt-check 2>&1"], shell=True).decode().split(";")[int(self.security_only)])
+		if (time.time()-self.last_check)>self.check_interval:
+			self.last_check = time.time()
+			self.last_state = subprocess.check_output(["/usr/lib/update-notifier/apt-check 2>&1"], shell=True).decode().split(";")
+		return int(self.last_state[int(self.security_only)])
 
 # Configuration
 def get_parameters(path):
