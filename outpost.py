@@ -1,5 +1,5 @@
 import yaml, json
-import socket, os, subprocess, sys, platform
+import socket, os, subprocess, sys, platform, ssl, datetime
 
 # Config
 BLACKLIST = []
@@ -109,6 +109,35 @@ class CheckSocketRange(CheckSocket):
 				return False
 		return True
 
+class CertificateCheck(Check):
+	_months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]
+	type_id = "SSL Certificates"
+	cert_path = None
+	err = None
+	def init(self, path):
+		self.cert_path = path
+		try:
+			self.cert = ssl._ssl._test_decode_cert(self.cert_path)
+		except Exception as e:
+			self.cert = {"subject":[[[None, path+" "+str(e)]]]}
+			self.err = e
+	def _gen_name(self): return self.cert["subject"][0][0][1]
+	def _is_valid(self):
+		x = datetime.datetime.now()
+		ts = self.cert["notAfter"].split()[:-1]
+		ts[0] = self._months.index(ts[0].lower())+1
+		decoded_ts = ts[2].split(":")
+		#date check
+		expires_on = datetime.datetime(int(ts[3]), ts[0], int(ts[1]), int(decoded_ts[0]),int(decoded_ts[1]),int(decoded_ts[2]))
+		t_diff = expires_on-x
+		return bool(t_diff.total_seconds()>0)
+	def _check(self):
+		try:
+			self.cert = ssl._ssl._test_decode_cert(self.cert_path)
+			return self._is_valid()
+		except:
+			return False
+
 # Configuration
 def get_parameters(path):
 	with open(path) as cf:
@@ -183,6 +212,21 @@ def get_process_checks(config):
 			checks.append(ProcessCheck(None, process))
 	return checks
 
+def get_certificate_checks(config):
+	checks = []
+	certs = config["certificates"]
+	for path in certs:
+		domains = os.listdir(path)
+		for i in domains:
+			cert_p = os.path.join(path,i)
+			cert_p = os.path.join(cert_p,"cert.pem")
+			c = CertificateCheck(None, cert_p)
+			if c.cert and not c.err:
+				checks.append(c)
+			else:
+				print("[!] Error checking", path+":",c.err)
+	return checks
+
 # Check Processing
 def run_checks(verbose=False):
 	for i in checks:
@@ -250,6 +294,7 @@ if __name__ == '__main__':
 	if "listening" in config: checks += get_socket_checks(objects, config)
 	if "processes" in config: checks += get_process_checks(config)
 	if "files" in config: checks += get_file_checks(config)
+	if "certificates" in config: checks += get_certificate_checks(config)
 	if platform.system()=="Linux" and "services" in config: checks += get_service_checks(config)
 
 	listen_loop(int(sys.argv[1]))
