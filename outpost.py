@@ -138,6 +138,14 @@ class CertificateCheck(Check):
 		except:
 			return False
 
+class AptUpdateCheck(Check):
+	type_id = "Available Updates"
+	def init(self, security_only=False):
+		self.security_only = security_only
+	def _gen_name(self): return "Security Updates" if self.security_only else "Available Updates"
+	def _check(self):
+		return int(subprocess.check_output(["/usr/lib/update-notifier/apt-check 2>&1"], shell=True).decode().split(";")[int(self.security_only)])
+
 # Configuration
 def get_parameters(path):
 	with open(path) as cf:
@@ -227,6 +235,9 @@ def get_certificate_checks(config):
 				print("[!] Error checking", path+":",c.err)
 	return checks
 
+def get_apt_checks():
+	return [AptUpdateCheck(None),AptUpdateCheck(None, security_only=True)]
+
 # Check Processing
 def run_checks(verbose=False):
 	for i in checks:
@@ -241,7 +252,7 @@ def generate_report():
 	return out
 
 def main(v=False):
-	global objects
+	global objects, apt_data
 	objects = get_open_sockets()
 	run_checks(v)
 	return generate_report()
@@ -295,6 +306,7 @@ if __name__ == '__main__':
 	if "processes" in config: checks += get_process_checks(config)
 	if "files" in config: checks += get_file_checks(config)
 	if "certificates" in config: checks += get_certificate_checks(config)
+	if "apt_updates" in config: checks+= get_apt_checks()
 	if platform.system()=="Linux" and "services" in config: checks += get_service_checks(config)
 
 	listen_loop(int(sys.argv[1]))

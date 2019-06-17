@@ -142,15 +142,24 @@ def display_status(offset=5, clear=True):
 			else: t = "[!] Outpost '{}' Status:".format(term_c.BOLD+outpost+term_c.ENDC)
 			out += "{}{}{}\n".format(t, " "*(width(t)-4), term_c.FAIL+"[ OFFLINE ]"+term_c.ENDC)
 		if state:
-			for type in sorted(state["states"]):
-				# print(state["states"][type])
-				type_state = gen_status([state["states"][type][j] for j in state["states"][type]])
-				t_h = " |- {}:".format(type)
+			for type_s in sorted(state["states"]):
+				# print(state["states"][type_s])
+				type_state = gen_status([state["states"][type_s][j] for j in state["states"][type_s]])
+				t_h = " |- {}:".format(type_s)
 				out += "{}{}{}\n".format(t_h, " "*(width(t_h)-12), type_state)
-				# print(type, state["states"][type])
-				for j in sorted(state["states"][type]):
-					i = state["states"][type][j]
-					l = "   {}- {}{}{}\n".format("|" if i else "#",j,"{}",term_c.OKGREEN+"[ OK ]   "+term_c.ENDC if i else term_c.FAIL+"[ Error ]"+term_c.ENDC)
+				# print(type_s, state["states"][type_s])
+				for j in sorted(state["states"][type_s]):
+					i = state["states"][type_s][j]
+					if type(i)==bool:
+						l = "   {}- {}{}{}\n".format("|" if i else "#",j,"{}",term_c.OKGREEN+"[ OK ]   "+term_c.ENDC if i else term_c.FAIL+"[ Error ]"+term_c.ENDC)
+					else:
+						prefix = "|" if i else "#"
+						color = term_c.OKGREEN if i else term_c.FAIL
+						text = str(i)
+						if type(i)==int:
+							prefix = "|" if not i else "#"
+							color = term_c.OKGREEN if i==0 else term_c.OKBLUE
+						l = "   {}- {}{}{}\n".format(prefix,j,"{}",color+"[ "+text+" ]"+(" "*(5-len(text)))+term_c.ENDC)
 					l = l.replace("{}"," "*(width(l)+9))
 					out += l
 		out+="\n"
