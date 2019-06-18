@@ -1,22 +1,22 @@
 import yaml, json, socket, subprocess, sys, time, threading
 
 _LAST_STATE_LENGTH = (0,0)
-UPDATE_RATE = 1.5 #In seconds
+UPDATE_RATE = 5 #In seconds
 if "-u" in sys.argv:
 	i = sys.argv.index("-u")
 	sys.argv.pop(i)
 	UPDATE_RATE = float(sys.argv.pop(i))
-REFRESH_RATE = 1 #In seconds
+REFRESH_RATE = 5 #In seconds
 if "-r" in sys.argv:
 	i = sys.argv.index("-r")
 	sys.argv.pop(i)
 	REFRESH_RATE = float(sys.argv.pop(i))
-PINGBACK_MAX = 3
+PINGBACK_MAX = 15
 if "-pm" in sys.argv:
 	i = sys.argv.index("-pm")
 	sys.argv.pop(i)
 	PINGBACK_MAX = float(sys.argv.pop(i))
-CYCLE_TIME = .01
+CYCLE_TIME = 1
 DEBUG = "-v" in sys.argv
 if DEBUG: sys.argv.pop(sys.argv.index("-v"))
 if DEBUG:
@@ -116,7 +116,7 @@ def get_all_states():
 def all_true(args):
 	for i in args:
 		# print(i)
-		if not i: return False
+		if (type(i)==int and i!=0) or (type(i)==bool and not i): return False
 	return True
 
 def gen_status(args):
@@ -158,7 +158,7 @@ def display_status(offset=5, clear=True):
 						text = str(i)
 						if type(i)==int:
 							prefix = "|" if not i else "#"
-							color = term_c.OKGREEN if i==0 else term_c.OKBLUE
+							color = term_c.OKGREEN if i==0 else "\033[36m"
 						l = "   {}- {}{}{}\n".format(prefix,j,"{}",color+"[ "+text+" ]"+(" "*(5-len(text)))+term_c.ENDC)
 					l = l.replace("{}"," "*(width(l)+9))
 					out += l
@@ -176,22 +176,21 @@ def clear_display():
 	sys.stdout.write(("\033[F"*(_LAST_STATE_LENGTH[0]+1)))
 	print()
 
-def main_loop(server):
-	print()
-	try:
-		while(1):
-			update_all(server)
-			get_responses(server)
-			# display_status()
-			# time.sleep(REFRESH_RATE)
-			# clear_display()
-	except KeyboardInterrupt:
-		return
+# def main_loop1(server):
+# 	print()
+# 	try:
+# 		while(1):
+# 			update_all(server)
+# 			get_responses(server)
+# 			# display_status()
+# 			# time.sleep(REFRESH_RATE)
+# 			# clear_display()
+# 	except KeyboardInterrupt:
+# 		return
 
-def main_loop2(server):
-	update_all(server)
-	t_r = time.time()
-	t_u = time.time()
+def main_loop(server):
+	t_u = time.time()-UPDATE_RATE-1
+	t_r = time.time()-REFRESH_RATE-1
 	try:
 		while(1):
 			t = time.time()
@@ -218,4 +217,4 @@ if __name__ == '__main__':
 	add_outposts(o)
 	server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	server.setblocking(False)
-	main_loop2(server)
+	main_loop(server)
