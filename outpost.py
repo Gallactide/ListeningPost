@@ -160,7 +160,7 @@ class DirectoryContentCheck(Check):
 	def _gen_name(self): return self.path
 	def _check(self):
 		t = os.listdir(self.path)
-		self.custom_content = zip(t, [True for i in range(len(t))])
+		self.custom_content = dict(zip(t, [True for i in range(len(t))]))
 
 # Configuration
 def get_parameters(path):
