@@ -332,8 +332,9 @@ if __name__ == '__main__':
 	if "processes" in config: checks += get_process_checks(config)
 	if "files" in config: checks += get_file_checks(config)
 	if "certificates" in config: checks += get_certificate_checks(config)
-	if "apt_updates" in config: checks+= get_apt_checks()
 	if "directory" in config: checks+=get_directory_checks(config)
-	if platform.system()=="Linux" and "services" in config: checks += get_service_checks(config)
+	if platform.system()=="Linux":
+		if "services" in config: checks += get_service_checks(config)
+		if "apt_updates" in config: checks+= get_apt_checks()
 
 	listen_loop(int(sys.argv[1]))
