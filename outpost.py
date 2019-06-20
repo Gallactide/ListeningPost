@@ -30,6 +30,7 @@ class InvalidParameter(Exception): pass
 class Check:
 	status = None
 	name = None
+	custom_content = None
 	def __init__(self,name,*args,**kwargs):
 		self.init(*args, **kwargs)
 		if name:
@@ -152,6 +153,14 @@ class AptUpdateCheck(Check):
 			self.last_state = subprocess.check_output(["/usr/lib/update-notifier/apt-check 2>&1"], shell=True).decode().split(";")
 		return int(self.last_state[int(self.security_only)])
 
+class DirectoryContentCheck(Check):
+	def init(self, path):
+		self.type_id = "Directory '{}' Content".format(path)
+	def _gen_name(self): return self.path
+	def _check(self):
+		t = os.listdir(self.path)
+		self.custom_content = zip(t, [True for i in range(len(t))])
+
 # Configuration
 def get_parameters(path):
 	with open(path) as cf:
@@ -241,6 +250,14 @@ def get_certificate_checks(config):
 				print("[!] Error checking", path+":",c.err)
 	return checks
 
+def get_directory_checks(config):
+	checks = []
+	if type(config["directory"])==list:
+		checks = [DirectoryContentCheck(i) for i in config["directory"]]
+	elif type(config["directory"])==str:
+		checks = DirectoryContentCheck(config["directory"])
+	return checks
+	
 def get_apt_checks():
 	return [AptUpdateCheck(None),AptUpdateCheck(None, security_only=True)]
 
@@ -254,7 +271,10 @@ def generate_report():
 	out = {"states":{}}
 	for i in checks:
 		if i.type_id not in out["states"]: out["states"][i.type_id]={}
-		out["states"][i.type_id][i.name]= i.status
+		if i.custom_content:
+			out["states"][i.type_id]=i.custom_content
+		else:
+			out["states"][i.type_id][i.name]=i.status
 	return out
 
 def main(v=False):
@@ -313,6 +333,7 @@ if __name__ == '__main__':
 	if "files" in config: checks += get_file_checks(config)
 	if "certificates" in config: checks += get_certificate_checks(config)
 	if "apt_updates" in config: checks+= get_apt_checks()
+	if "directory" in config: check+=get_directory_checks(config)
 	if platform.system()=="Linux" and "services" in config: checks += get_service_checks(config)
 
 	listen_loop(int(sys.argv[1]))
