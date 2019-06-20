@@ -257,7 +257,11 @@ def get_directory_checks(config):
 	elif type(config["directory"])==str:
 		checks = DirectoryContentCheck(config["directory"])
 	return checks
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 41de8f554db17423211d8e777902714ab9e6086f
 def get_apt_checks():
 	return [AptUpdateCheck(None),AptUpdateCheck(None, security_only=True)]
 
@@ -333,7 +337,11 @@ if __name__ == '__main__':
 	if "files" in config: checks += get_file_checks(config)
 	if "certificates" in config: checks += get_certificate_checks(config)
 	if "apt_updates" in config: checks+= get_apt_checks()
+<<<<<<< HEAD
 	if "directory" in config: checks+=get_directory_checks(config)
+=======
+	if "directory" in config: check+=get_directory_checks(config)
+>>>>>>> 41de8f554db17423211d8e777902714ab9e6086f
 	if platform.system()=="Linux" and "services" in config: checks += get_service_checks(config)
 
 	listen_loop(int(sys.argv[1]))
