@@ -156,6 +156,7 @@ class AptUpdateCheck(Check):
 class DirectoryContentCheck(Check):
 	def init(self, path):
 		self.type_id = "Directory '{}' Content".format(path)
+		self.path = path
 	def _gen_name(self): return self.path
 	def _check(self):
 		t = os.listdir(self.path)
