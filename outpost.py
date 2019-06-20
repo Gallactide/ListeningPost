@@ -1,30 +1,6 @@
 import yaml, json
 import socket, os, subprocess, sys, platform, ssl, datetime, time
 
-# Config
-BLACKLIST = []
-BLACKLIST_PENDING = {}
-STRIKE_LIMIT = 3
-CONNECTION_DEBUG = False
-if "-d" in sys.argv:
-	sys.argv.pop(sys.argv.index("-d"))
-	CONNECTION_DEBUG=True
-DEBUG = False
-if "-v" in sys.argv:
-	sys.argv.pop(sys.argv.index("-v"))
-	DEBUG=True
-	if not CONNECTION_DEBUG: CONNECTION_DEBUG = True
-if DEBUG: print("[=] Starting with Verbose Output")
-if CONNECTION_DEBUG: print("[=] Starting with Connection Debug Output")
-CHALLENGE = "cd5f1e5e90"
-if "-c" in sys.argv:
-	i = sys.argv.index("-c")
-	sys.argv.pop(i)
-	CHALLENGE = sys.argv.pop(i)
-	print("[+] Custom Challenge Set.")
-	if DEBUG or CONNECTION_DEBUG: print(" |- Challenge: {}".format(CHALLENGE))
-WHITELIST = ["80.113.19.114"]
-
 class InvalidParameter(Exception): pass
 
 class Check:
@@ -327,6 +303,34 @@ def listen_loop(port):
 
 if __name__ == '__main__':
 	config = get_parameters(sys.argv[2])
+
+	# Config
+	BLACKLIST = []
+	BLACKLIST_PENDING = {}
+	STRIKE_LIMIT = 3
+	CONNECTION_DEBUG = False
+	if "-d" in sys.argv:
+		sys.argv.pop(sys.argv.index("-d"))
+		CONNECTION_DEBUG=True
+	DEBUG = False
+	if "-v" in sys.argv:
+		sys.argv.pop(sys.argv.index("-v"))
+		DEBUG=True
+		if not CONNECTION_DEBUG: CONNECTION_DEBUG = True
+	if DEBUG: print("[=] Starting with Verbose Output")
+	if CONNECTION_DEBUG: print("[=] Starting with Connection Debug Output")
+	CHALLENGE = "cd5f1e5e90"
+	if "-c" in sys.argv:
+		i = sys.argv.index("-c")
+		sys.argv.pop(i)
+		CHALLENGE = sys.argv.pop(i)
+		print("[+] Custom Challenge Set.")
+	elif "challenge" in config:
+	 	CHALLENGE = config["challenge"]
+		print("[+] Custom Challenge Set.")
+	if DEBUG or CONNECTION_DEBUG: print(" |- Challenge: {}".format(CHALLENGE))
+	WHITELIST = ["80.113.19.114"]
+
 	objects = get_open_sockets()
 	checks = []
 	if "listening" in config: checks += get_socket_checks(objects, config)
