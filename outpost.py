@@ -326,7 +326,7 @@ if __name__ == '__main__':
 		CHALLENGE = sys.argv.pop(i)
 		print("[+] Custom Challenge Set.")
 	elif "challenge" in config:
-	 	CHALLENGE = config["challenge"]
+		CHALLENGE = config["challenge"]
 		print("[+] Custom Challenge Set.")
 	if DEBUG or CONNECTION_DEBUG: print(" |- Challenge: {}".format(CHALLENGE))
 	WHITELIST = ["80.113.19.114"]
