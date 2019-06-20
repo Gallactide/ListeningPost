@@ -253,9 +253,9 @@ def get_certificate_checks(config):
 def get_directory_checks(config):
 	checks = []
 	if type(config["directory"])==list:
-		checks = [DirectoryContentCheck(i) for i in config["directory"]]
+		checks = [DirectoryContentCheck(None, i) for i in config["directory"]]
 	elif type(config["directory"])==str:
-		checks = DirectoryContentCheck(config["directory"])
+		checks = DirectoryContentCheck(None, config["directory"])
 	return checks
 
 def get_apt_checks():
